@@ -42,7 +42,7 @@ const getDiagnosisTitle = (severity) => {
         1: "Nhịp tim cần theo dõi",
         2: "Nguy cơ tim mạch trung bình",
         3: "Nguy cơ tim mạch cao",
-        4: "Nguy cơ tim mạch rất cao - CẨN TRỌNG"
+        4: "Nguy cơ tim mạch rất cao - CẨN TRỌNG",
     };
     return titles[severity] || "Không xác định";
 };
@@ -53,7 +53,7 @@ const getUrgencyLevel = (severity) => {
         1: "routine",
         2: "urgent",
         3: "urgent",
-        4: "emergency"
+        4: "emergency",
     };
     return levels[severity] || "routine";
 };
@@ -80,7 +80,8 @@ const generateRecommendations = (heartRate, severity, confidence) => {
     } else if (severity === "high") {
         baseRecommendations.push("Thăm khám chuyên khoa tim mạch ngay", "Thực hiện các xét nghiệm máu");
         baseRecommendations.push("Bắt đầu chế độ ăn DASH hoặc Mediterranean");
-    } else { // critical
+    } else {
+        // critical
         baseRecommendations.push("Đến phòng cấp cứu ngay lập tức", "Không lái xe một mình");
         baseRecommendations.push("Chuẩn bị thông tin bệnh sử cá nhân");
     }
@@ -187,40 +188,37 @@ export const diagnoseHeartRate = async (heartRateData) => {
 
 // ===== Advanced Python AI Diagnosis =====
 const diagnoseWithPythonAI = async (heartRateData) => {
-    const { spawn } = await import('child_process');
-    const path = await import('path');
-    const fs = await import('fs');
+    const { spawn } = await import("child_process");
+    const path = await import("path");
+    const fs = await import("fs");
 
     return new Promise((resolve, reject) => {
         const { heartRate, age = 50, sex = 1, trestbps = 120, chol = 200 } = heartRateData;
 
-        // Chạy Python script
-        const pythonProcess = spawn('python3', [
-            path.join(process.cwd(), 'run_ai.py'),
-            heartRate.toString(),
-            age.toString(),
-            sex.toString(),
-            trestbps.toString(),
-            chol.toString()
-        ], { cwd: process.cwd() });
+        // Use full path to Python in virtual environment
+        const pythonPath = path.join(process.cwd(), "ai_env", "bin", "python3");
+        const scriptPath = path.join(process.cwd(), "run_ai.py");
 
-        let stdout = '';
-        let stderr = '';
+        // Chạy Python script với virtual environment
+        const pythonProcess = spawn(pythonPath, [scriptPath, heartRate.toString(), age.toString(), sex.toString(), trestbps.toString(), chol.toString()], { cwd: process.cwd() });
 
-        pythonProcess.stdout.on('data', (data) => {
+        let stdout = "";
+        let stderr = "";
+
+        pythonProcess.stdout.on("data", (data) => {
             stdout += data.toString();
         });
 
-        pythonProcess.stderr.on('data', (data) => {
+        pythonProcess.stderr.on("data", (data) => {
             stderr += data.toString();
         });
 
-        pythonProcess.on('close', (code) => {
+        pythonProcess.on("close", (code) => {
             if (code === 0) {
                 try {
                     // Đọc kết quả từ file JSON
-                    const resultPath = path.join(process.cwd(), 'ai_result.json');
-                    const resultData = fs.readFileSync(resultPath, 'utf8');
+                    const resultPath = path.join(process.cwd(), "ai_result.json");
+                    const resultData = fs.readFileSync(resultPath, "utf8");
                     const insights = JSON.parse(resultData);
 
                     // Map Python AI result to our format
@@ -241,9 +239,8 @@ const diagnoseWithPythonAI = async (heartRateData) => {
                         success: true,
                         diagnosis,
                         aiModel: "python-advanced-ai",
-                        timestamp: new Date()
+                        timestamp: new Date(),
                     });
-
                 } catch (parseError) {
                     reject(new Error(`Failed to parse Python AI result: ${parseError.message}`));
                 }
@@ -252,7 +249,7 @@ const diagnoseWithPythonAI = async (heartRateData) => {
             }
         });
 
-        pythonProcess.on('error', (error) => {
+        pythonProcess.on("error", (error) => {
             reject(new Error(`Failed to start Python AI: ${error.message}`));
         });
     });

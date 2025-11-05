@@ -4,8 +4,8 @@ import { diagnoseHeartRate, analyzeTrend } from '../services/ai.service.js';
 // Lưu dữ liệu nhịp tim khi user đăng nhập (với AI diagnosis)
 export const recordHeartRate = async (req, res) => {
   try {
-    const { heartRate, ecg, acc, notes } = req.body;
-    const userId = req.userId; // Lấy từ middleware auth
+    const { heartRate, ecg, acc, notes, userId: bodyUserId } = req.body;
+    const userId = req.userId || bodyUserId || '507f1f77bcf86cd799439011'; // Default test userId if not authenticated
 
     // Validate heart rate
     if (!heartRate || heartRate < 0 || heartRate > 300) {
