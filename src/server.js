@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dataRoutes from "./routes/data.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import heartRateRoutes from "./routes/heartrate.routes.js";
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ console.log("✅ MongoDB connected");
 // Routes
 app.use("/api/data", dataRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/heartrate", heartRateRoutes);
 
 // Start server
 const PORT = 3000;

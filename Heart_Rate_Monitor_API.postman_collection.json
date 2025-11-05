@@ -1,0 +1,362 @@
+{
+  "info": {
+    "name": "Heart Rate Monitor API with AI",
+    "description": "API để đo nhịp tim với AI diagnosis tự động",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "console.log(\"Token saved:\", jsonData.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Heart Rate Recording",
+      "item": [
+        {
+          "name": "Record Normal Heart Rate (75 bpm)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heartRate\": 75,\n  \"ecg\": 120,\n  \"acc\": [1.2, 0.8, 1.5],\n  \"notes\": \"Nghỉ ngơi buổi sáng - bình thường\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "record"]
+            }
+          }
+        },
+        {
+          "name": "Record Slow Heart Rate (52 bpm)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heartRate\": 52,\n  \"ecg\": 90,\n  \"acc\": [0.5, 0.3, 0.6],\n  \"notes\": \"Buổi sáng sớm - nhịp tim chậm\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "record"]
+            }
+          }
+        },
+        {
+          "name": "Record Fast Heart Rate (125 bpm)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heartRate\": 125,\n  \"ecg\": 145,\n  \"acc\": [2.5, 1.8, 2.2],\n  \"notes\": \"Sau khi chạy bộ - nhịp tim nhanh\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "record"]
+            }
+          }
+        },
+        {
+          "name": "Record Critical Heart Rate (155 bpm)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heartRate\": 155,\n  \"ecg\": 180,\n  \"acc\": [3.5, 2.8, 3.2],\n  \"notes\": \"Cảm thấy hồi hộp, đau ngực - NGUY HIỂM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "record"]
+            }
+          }
+        },
+        {
+          "name": "Record Normal Heart Rate (85 bpm)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heartRate\": 85,\n  \"ecg\": 115,\n  \"acc\": [1.0, 0.9, 1.1],\n  \"notes\": \"Đang làm việc - bình thường\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "record"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Query & Analytics",
+      "item": [
+        {
+          "name": "Get Heart Rate History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/history?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Latest Heart Rate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/latest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "latest"]
+            }
+          }
+        },
+        {
+          "name": "Get Heart Rate Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/stats?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "stats"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. AI Analysis",
+      "item": [
+        {
+          "name": "Get Heart Rate Trend (AI)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/trend?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "trend"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts and Warnings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "alerts"]
+            }
+          }
+        },
+        {
+          "name": "Re-diagnose Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/heartrate/re-diagnose/:recordId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "heartrate", "re-diagnose", ":recordId"],
+              "variable": [
+                {
+                  "key": "recordId",
+                  "value": "PASTE_RECORD_ID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

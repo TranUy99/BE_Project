@@ -4,6 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
+    "setup-ai": "./setup_ai.sh",
+    "train-ai": "python3 ai_heart_diagnosis.py",
+    "test-ai": "python3 run_ai.py 85 45 1 130 220",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +15,8 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
