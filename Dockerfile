@@ -1,47 +1,38 @@
 # Dockerfile for Render deployment
-FROM python:3.11-slim
+FROM node:20-bullseye-slim
 
-# Install Node.js and npm
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm \
-    curl \
+# Install Python and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv python3-pip python3-dev build-essential curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy Python requirements first
-COPY requirements.txt .
+# Copy manifests first for better layer caching
+COPY package.json package-lock.json ./
+COPY requirements.txt ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Node dependencies (use ci if lockfile present)
+RUN npm ci --omit=dev || npm install --production
 
-# Copy package files
-COPY package*.json ./
+# Install Python dependencies (in system, small set) and train model
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install Node.js dependencies
-RUN npm ci --only=production
-
-# Copy source code
+# Copy application source
 COPY src/ ./src/
-COPY ai_heart_diagnosis.py .
-COPY run_ai.py .
-COPY heart.csv .
-COPY setup_ai.sh .
+COPY ai_heart_diagnosis.py run_ai.py heart.csv setup_ai.sh ./
 
-# Make setup script executable
-RUN chmod +x setup_ai.sh
+# Train AI model (dataset nhỏ nên OK). If fail, build continues.
+RUN chmod +x setup_ai.sh && python3 ai_heart_diagnosis.py || echo "⚠️ Model training failed during build, will train at runtime"
 
-# Train AI model during build
-RUN python3 ai_heart_diagnosis.py
+# Environment
+ENV NODE_ENV=production
 
-# Expose port
-EXPOSE $PORT
+EXPOSE 3000
 
-# Health check
+# Health check (Render/Railway may ignore in Docker but kept for portability)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:$PORT/api/heartrate/history?userId=test || exit 1
+  CMD curl -f http://localhost:3000/api/heartrate/history?userId=test || exit 1
 
-# Start the application
-CMD ["npm", "start"]
+# Start server
+CMD ["node", "src/server.js"]
