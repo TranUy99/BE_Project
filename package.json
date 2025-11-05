@@ -14,7 +14,13 @@
     "postinstall": "npm run setup-ai",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["heart-rate", "ai", "health", "monitoring", "api"],
+  "keywords": [
+    "heart-rate",
+    "ai",
+    "health",
+    "monitoring",
+    "api"
+  ],
   "author": "TranUy99",
   "license": "ISC",
   "description": "Heart Rate Monitoring API with Advanced AI Diagnosis",
@@ -29,9 +35,9 @@
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
-    "dotenv": "^16.4.5"
+    "mongoose": "^8.19.1"
   }
 }
