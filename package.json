@@ -1,19 +1,28 @@
 {
-  "name": "project",
+  "name": "heart-rate-monitor-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "build": "echo 'No build step required'",
     "setup-ai": "./setup_ai.sh",
     "train-ai": "python3 ai_heart_diagnosis.py",
     "test-ai": "python3 run_ai.py 85 45 1 130 220",
+    "deploy": "./deploy.sh",
+    "deploy-render": "./render-deploy.sh",
+    "postinstall": "npm run setup-ai",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["heart-rate", "ai", "health", "monitoring", "api"],
+  "author": "TranUy99",
   "license": "ISC",
-  "description": "",
+  "description": "Heart Rate Monitoring API with Advanced AI Diagnosis",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.8.0"
+  },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-node": "^4.22.0",

@@ -15,9 +15,23 @@ yarn.lock
 logs/
 *.log
 
-# OS files
-.DS_Store
-Thumbs.db
+# AI Model files (generated on deployment)
+heart_diagnosis_model.pkl
+ai_result.json
+feature_importance.png
+*.pkl
+*.joblib
+
+# Python virtual environment
+ai_env/
+venv/
+env/
+
+# Railway
+.railway/
+
+# Deployment logs
+deploy.log
 
 # IDE
 .vscode/

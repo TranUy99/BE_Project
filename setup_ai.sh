@@ -12,16 +12,20 @@ fi
 
 python3 --version
 
-# Install Python dependencies
+# Install Python dependencies with fallback (handle PEP 668 / managed env)
 echo "📦 Installing Python dependencies..."
-pip3 install -r requirements.txt
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to install Python dependencies"
-    exit 1
+if ! pip3 install -r requirements.txt 2>/dev/null; then
+    echo "⚠️  Direct install failed (possibly managed environment). Creating virtual env..."
+    python3 -m venv ai_env
+    source ai_env/bin/activate
+    if ! pip install -r requirements.txt; then
+        echo "❌ Failed to install Python dependencies even in virtual env"
+        exit 1
+    fi
+    echo "✅ Dependencies installed inside virtual environment"
+else
+    echo "✅ Python dependencies installed"
 fi
-
-echo "✅ Python dependencies installed"
 
 # Check if model exists
 if [ ! -f "heart_diagnosis_model.pkl" ]; then
@@ -31,9 +35,13 @@ else
     echo "✅ AI model already exists"
 fi
 
-# Test the AI
+# Test the AI (use venv python if exists)
 echo "🧪 Testing AI diagnosis..."
-python3 run_ai.py 85 45 1 130 220
+PYBIN="python3"
+if [ -f "ai_env/bin/python" ]; then
+    PYBIN="ai_env/bin/python"
+fi
+$PYBIN run_ai.py 85 45 1 130 220
 
 if [ $? -eq 0 ]; then
     echo "✅ AI system ready!"

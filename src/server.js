@@ -13,12 +13,18 @@ app.use(bodyParser.json());
 // 🔐 Dùng encodeURIComponent cho password
 const username = "uytran_db_user";
 const password = encodeURIComponent("Uytran123!");
-// const uri = `mongodb+srv://${username}:${password}@cluster0.zttgim9.mongodb.net/?retryWrites=true&w=majority`;
-const uri = "mongodb://localhost:27017/be_project"; // Sử dụng MongoDB local
+// Ưu tiên dùng biến môi trường MONGODB_URI (Railway plugin tự set), fallback local
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/be_project";
 
-// Kết nối MongoDB
-await mongoose.connect(uri);
-console.log("✅ MongoDB connected");
+try {
+	await mongoose.connect(uri, {
+		// bufferCommands: false // (optionally disable buffering)
+	});
+	console.log("✅ MongoDB connected ->", uri.includes('localhost') ? 'local' : 'remote');
+} catch (err) {
+	console.error("❌ MongoDB connection failed:", err.message);
+	process.exit(1);
+}
 
 // Routes
 app.use("/api/data", dataRoutes);
@@ -26,5 +32,5 @@ app.use("/api/auth", authRoutes);
 app.use("/api/heartrate", heartRateRoutes);
 
 // Start server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
