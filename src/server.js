@@ -42,29 +42,6 @@ connectMongo();
 
 // Basic health endpoints for deployment diagnostics
 // readyState: 0=disconnected,1=connected,2=connecting,3=disconnecting
-import http from "http"; // (tree-shake harmless) ensures runtime availability if needed
-app.get("/health", (req, res) => {
-    res.json({
-        status: "ok",
-        uptime: process.uptime(),
-        dbState: mongoose.connection.readyState,
-        timestamp: new Date().toISOString(),
-    });
-});
-
-app.get("/health/db", async (req, res) => {
-    try {
-        // admin().ping() works only once connected
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ status: "pending", dbState: mongoose.connection.readyState });
-        }
-        const admin = mongoose.connection.db.admin();
-        await admin.ping();
-        res.json({ status: "ok" });
-    } catch (err) {
-        res.status(500).json({ status: "error", error: err.message });
-    }
-});
 
 app.get("/", (req, res) => {
     res.send("✅ Server is running on Railway");
