@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import cors from "cors";
-import 'dotenv/config'; // Loads environment variables from .env if present
+import "dotenv/config"; // Loads environment variables from .env if present
 import dataRoutes from "./routes/data.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import heartRateRoutes from "./routes/heartrate.routes.js";
@@ -16,30 +16,59 @@ app.use(bodyParser.json());
 const uri = process.env.MONGODB_URI?.trim() || "mongodb://localhost:27017/be_project";
 
 if (!process.env.MONGODB_URI) {
-	console.warn("⚠️ MONGODB_URI not set - using local MongoDB (ensure mongod is running). Set MONGODB_URI for Atlas.");
+    console.warn("⚠️ MONGODB_URI not set - using local MongoDB (ensure mongod is running). Set MONGODB_URI for Atlas.");
 }
 
 async function connectMongo(maxRetries = 3) {
-	for (let attempt = 1; attempt <= maxRetries; attempt++) {
-		try {
-			await mongoose.connect(uri, {
-				// serverSelectionTimeoutMS: 10000,
-			});
-			console.log(`✅ MongoDB connected (${uri.startsWith('mongodb+srv') ? 'Atlas' : uri.includes('localhost') ? 'local' : 'remote'})`);
-			return;
-		} catch (err) {
-			console.error(`❌ MongoDB connection failed (attempt ${attempt}/${maxRetries}):`, err.message);
-			if (attempt === maxRetries) {
-				console.error("🚫 Giving up after max retries.");
-				process.exit(1);
-			}
-			await new Promise(r => setTimeout(r, 2000));
-		}
-	}
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            await mongoose.connect(uri, {
+                // serverSelectionTimeoutMS: 10000,
+            });
+            console.log(`✅ MongoDB connected (${uri.startsWith("mongodb+srv") ? "Atlas" : uri.includes("localhost") ? "local" : "remote"})`);
+            return;
+        } catch (err) {
+            console.error(`❌ MongoDB connection failed (attempt ${attempt}/${maxRetries}):`, err.message);
+            if (attempt === maxRetries) {
+                console.error("🚫 Giving up after max retries.");
+                process.exit(1);
+            }
+            await new Promise((r) => setTimeout(r, 2000));
+        }
+    }
 }
 
 connectMongo();
 
+// Basic health endpoints for deployment diagnostics
+// readyState: 0=disconnected,1=connected,2=connecting,3=disconnecting
+import http from "http"; // (tree-shake harmless) ensures runtime availability if needed
+app.get("/health", (req, res) => {
+    res.json({
+        status: "ok",
+        uptime: process.uptime(),
+        dbState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString(),
+    });
+});
+
+app.get("/health/db", async (req, res) => {
+    try {
+        // admin().ping() works only once connected
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ status: "pending", dbState: mongoose.connection.readyState });
+        }
+        const admin = mongoose.connection.db.admin();
+        await admin.ping();
+        res.json({ status: "ok" });
+    } catch (err) {
+        res.status(500).json({ status: "error", error: err.message });
+    }
+});
+
+app.get("/", (req, res) => {
+    res.send("✅ Server is running on Railway");
+});
 // Routes
 app.use("/api/data", dataRoutes);
 app.use("/api/auth", authRoutes);
