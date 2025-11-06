@@ -6,6 +6,7 @@ import "dotenv/config"; // Loads environment variables from .env if present
 import dataRoutes from "./routes/data.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import heartRateRoutes from "./routes/heartrate.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 
 const app = express();
 app.use(cors());
@@ -54,6 +55,7 @@ app.get("/health", (req, res) => {
 app.use("/api/data", dataRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/heartrate", heartRateRoutes);
+app.use("/api/health", healthRoutes);
 
 // Start server
 const PORT = process.env.PORT || 3000;

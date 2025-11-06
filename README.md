@@ -42,6 +42,18 @@ AI phân tích lịch sử nhịp tim để:
 POST /api/auth/register - Đăng ký
 POST /api/auth/login    - Đăng nhập
 ```
+Đăng ký có thể thêm các trường sức khoẻ cơ bản:
+```jsonc
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "secret123",
+  "age": 55,
+  "gender": "female", // male | female | other
+  "weight": 62,         // kg
+  "conditions": ["hypertension", "diabetes"] // bệnh nền hoặc từ khoá: athlete, obesity, thyroid
+}
+```
 
 ### Heart Rate Monitoring (Cần token)
 
@@ -152,6 +164,108 @@ Response: {
 }
 ```
 
+### Health Dashboard (Cần token)
+Tổng hợp hồ sơ sức khoẻ, phạm vi nhịp tim lý tưởng cá nhân hoá, record mới nhất và thống kê 7 ngày.
+```http
+GET /api/health/dashboard
+Headers: { Authorization: "Bearer <token>" }
+
+Response: {
+  "success": true,
+  "dashboard": {
+    "user": {
+      "id": "...",
+      "username": "alice",
+      "age": 55,
+      "gender": "female",
+      "weight": 62,
+      "conditions": ["hypertension", "diabetes"]
+    },
+    "heartMetrics": {
+      "resting": { "min": 66, "max": 91 },
+      "max": 170,
+      "targetZones": { "light": 85, "moderate": 119, "vigorous": 145 },
+      "assumptions": null
+    },
+    "latestRecord": {
+      "heartRate": 78,
+      "status": "normal",
+      "recordedAt": "2025-11-05T10:30:00.000Z",
+      "aiDiagnosis": { "diagnosis": "Nhịp tim bình thường", ... }
+    },
+    "stats7d": {
+      "avgHeartRate": 79,
+      "minHeartRate": 65,
+      "maxHeartRate": 95,
+      "totalRecords": 42
+    },
+    "riskNotes": [
+      "Cần kiểm soát huyết áp và hạn chế muối.",
+      "Theo dõi đường huyết giúp giảm biến chứng tim mạch."
+    ],
+    "generatedAt": "2025-11-05T10:31:12.000Z"
+  }
+}
+```
+
+### Phân tích chuyên sâu nhịp tim (Analysis) 🤖
+Tính toán thống kê, biến thiên (HRV proxy), xu hướng và phân bố ngoài phạm vi lý tưởng.
+```http
+GET /api/health/analysis?days=7&limit=200
+GET /api/health/analysis?startDate=2025-11-01&endDate=2025-11-06
+Headers: { Authorization: "Bearer <token>" }
+
+Response: {
+  "success": true,
+  "analysis": {
+    "rangeQuery": { "days": 7, "limit": 200, "startDate": null, "endDate": null },
+    "totalRecords": 120,
+    "stats": {
+      "average": 78.42,
+      "min": 55,
+      "max": 132,
+      "sd": 7.35,
+      "hrvProxy": "moderate", // very-low | low | moderate | high
+      "variabilityNote": null
+    },
+    "distribution": { "outOfRangePct": 18.3 },
+    "trend": { "dominant": "increasing", "longestStreak": 5 },
+    "samplePreview": [
+      { "heartRate": 88, "at": "2025-11-06T10:32:11.000Z", "status": "warning" },
+      { "heartRate": 76, "at": "2025-11-06T09:58:02.000Z", "status": "normal" }
+    ],
+    "generatedAt": "2025-11-06T10:33:05.000Z"
+  }
+}
+```
+
+### Dự đoán nhanh bằng History ML Model
+Sử dụng model RandomForest huấn luyện từ dữ liệu thật (`train_history_model.py`).
+```http
+POST /api/health/predict-history
+Headers: { Authorization: "Bearer <token>", "Content-Type": "application/json" }
+Body: {
+  "heartRate": 78,
+  "age": 55,
+  "gender": "female",
+  "weight": 62,
+  "conditions": ["hypertension", "diabetes"],
+  "hour": 10
+}
+
+Response: {
+  "success": true,
+  "prediction": {
+    "label": "medium",
+    "label_index": 1,
+    "probabilities": [0.05,0.62,0.20,0.08,0.05],
+    "label_map": {"low":0,"medium":1,"high":2,"critical":3}
+  },
+  "input": { "heartRate":78, "age":55, "gender":"female", "weight":62, "conditions":["hypertension","diabetes"], "hour":10 },
+  "meta": { "feature_names_count": 30, "conditions_vector_count": 12 }
+}
+```
+
 ## 📊 Phân loại mức độ nghiêm trọng
 
 ### Severity Levels:
@@ -170,6 +284,7 @@ Response: {
 Hệ thống sử dụng:
 1. **GPT-4O Mini** (OpenAI) - Chuẩn đoán chính
 2. **Rule-based fallback** - Dự phòng khi AI không khả dụng
+3. **History ML Model** - Mô hình RandomForest huấn luyện từ dữ liệu thật trong MongoDB (`train_history_model.py`)
 
 ## 💡 Ví dụ sử dụng
 
@@ -208,6 +323,49 @@ const trendResponse = await fetch('http://localhost:3000/api/heartrate/trend?day
 });
 const trend = await trendResponse.json();
 console.log('Trend Analysis:', trend.trendAnalysis);
+```
+
+## 🛠 Huấn luyện mô hình từ dữ liệu thực tế
+
+Script: `train_history_model.py`
+
+```bash
+# Kích hoạt môi trường
+source ai_env/bin/activate
+
+# Cài thêm dependency mới nếu chưa có
+pip install -r requirements.txt
+
+# Train dựa trên 30 ngày gần nhất, nhãn lấy từ aiDiagnosis.severity
+python train_history_model.py --days 30 --label-source aiDiagnosis.severity
+
+# Train dựa trên status thay vì severity
+python train_history_model.py --days 14 --label-source status
+
+# Train theo khoảng ngày cụ thể
+python train_history_model.py --startDate 2025-10-01 --endDate 2025-11-01 --label-source auto
+```
+
+Artifacts tạo ra:
+```
+heart_model/history_model.pkl          # Model + scaler + metadata
+heart_model/history_features.json      # Thứ tự feature, conditions, label map
+```
+
+Sử dụng lại model trong Python:
+```python
+import joblib, json
+model_bundle = joblib.load('heart_model/history_model.pkl')
+model = model_bundle['model']
+scaler = model_bundle['scaler']
+feature_names = model_bundle['feature_names']
+
+# Chuẩn bị vector input tương ứng feature_names
+import numpy as np
+input_vector = np.zeros(len(feature_names))
+# set giá trị thực tế vào input_vector[...] theo thứ tự feature_names
+prediction = model.predict(scaler.transform([input_vector]))[0]
+print('Pred label index:', prediction)
 ```
 
 ## ⚙️ Cấu hình

@@ -1,24 +1,47 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    // ===== Health Profile Fields =====
+    age: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      default: "other",
+    },
+    weight: {
+      type: Number, // kilograms
+      min: 0,
+      default: null,
+    },
+    conditions: {
+      type: [String], // bệnh nền / health conditions (e.g. 'hypertension','diabetes','athlete')
+      default: [],
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  }
+);
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
