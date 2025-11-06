@@ -38,13 +38,13 @@ const safeJsonParse = (text, fallback) => {
 
 const getDiagnosisTitle = (severity) => {
     const titles = {
-        0: "Nhịp tim khỏe mạnh",
-        1: "Nhịp tim cần theo dõi",
-        2: "Nguy cơ tim mạch trung bình",
-        3: "Nguy cơ tim mạch cao",
-        4: "Nguy cơ tim mạch rất cao - CẨN TRỌNG",
+        0: "Healthy heart rate",
+        1: "Heart rate needs monitoring",
+        2: "Moderate cardiovascular risk",
+        3: "High cardiovascular risk",
+        4: "Very high cardiovascular risk - URGENT",
     };
-    return titles[severity] || "Không xác định";
+    return titles[severity] || "Unknown";
 };
 
 const getUrgencyLevel = (severity) => {
@@ -64,31 +64,31 @@ const generateRecommendations = (heartRate, severity, confidence) => {
 
     // AI "thinks" about heart rate patterns
     if (heartRate < 60) {
-        baseRecommendations.push("Tăng cường hoạt động thể chất nhẹ nhàng", "Theo dõi nhịp tim hàng ngày");
+        baseRecommendations.push("Increase light physical activity", "Monitor heart rate daily");
     } else if (heartRate > 100) {
-        baseRecommendations.push("Giảm caffeine và đồ uống có cồn", "Thực hiện kỹ thuật thư giãn");
+        baseRecommendations.push("Reduce caffeine and alcohol", "Practice relaxation techniques");
     } else {
-        baseRecommendations.push("Duy trì thói quen tập luyện đều đặn", "Ăn uống cân bằng");
+        baseRecommendations.push("Maintain regular exercise habits", "Eat a balanced diet");
     }
 
     // AI adds severity-specific recommendations
     if (severity === "low") {
-        baseRecommendations.push("Khám sức khỏe định kỳ 6 tháng/lần", "Theo dõi chỉ số BMI");
+        baseRecommendations.push("Routine health check every 6 months", "Monitor BMI");
     } else if (severity === "medium") {
-        baseRecommendations.push("Khám tim mạch trong vòng 3 tháng", "Học kỹ thuật quản lý stress");
-        baseRecommendations.push("Theo dõi huyết áp tại nhà");
+        baseRecommendations.push("See cardiology within 3 months", "Learn stress management techniques");
+        baseRecommendations.push("Monitor blood pressure at home");
     } else if (severity === "high") {
-        baseRecommendations.push("Thăm khám chuyên khoa tim mạch ngay", "Thực hiện các xét nghiệm máu");
-        baseRecommendations.push("Bắt đầu chế độ ăn DASH hoặc Mediterranean");
+        baseRecommendations.push("See a cardiologist immediately", "Run blood tests as advised");
+        baseRecommendations.push("Start a DASH or Mediterranean style diet");
     } else {
         // critical
-        baseRecommendations.push("Đến phòng cấp cứu ngay lập tức", "Không lái xe một mình");
-        baseRecommendations.push("Chuẩn bị thông tin bệnh sử cá nhân");
+        baseRecommendations.push("Go to the emergency room immediately", "Do not drive alone");
+        baseRecommendations.push("Prepare personal medical history information");
     }
 
     // AI adds confidence-based recommendations
     if (parseFloat(confidence) > 80) {
-        baseRecommendations.push("Theo dõi sát sao các triệu chứng mới xuất hiện");
+        baseRecommendations.push("Closely monitor any new symptoms");
     }
 
     // AI "randomly" selects 4-6 most relevant recommendations
@@ -101,29 +101,29 @@ const generateRiskFactors = (heartRate, severity, confidence) => {
 
     // AI analyzes heart rate for potential risk factors
     if (heartRate < 50) {
-        baseRiskFactors.push("Tuổi tác cao", "Sử dụng thuốc điều trị tim mạch");
+        baseRiskFactors.push("Advanced age", "Use of cardiac medications");
     } else if (heartRate > 120) {
-        baseRiskFactors.push("Stress kéo dài", "Thiếu ngủ mạn tính");
-        baseRiskFactors.push("Rối loạn nội tiết");
+        baseRiskFactors.push("Prolonged stress", "Chronic sleep deprivation");
+        baseRiskFactors.push("Endocrine disorders");
     }
 
     // AI adds severity-based risk factors
     if (severity === "medium") {
-        baseRiskFactors.push("Lối sống ít vận động", "Hút thuốc lá");
-        baseRiskFactors.push("Tiền sử gia đình mắc bệnh tim mạch");
+        baseRiskFactors.push("Sedentary lifestyle", "Smoking");
+        baseRiskFactors.push("Family history of heart disease");
     } else if (severity === "high") {
-        baseRiskFactors.push("Tăng huyết áp", "Cholesterol máu cao");
-        baseRiskFactors.push("Béo phì hoặc thừa cân");
-        baseRiskFactors.push("Đái tháo đường type 2");
+        baseRiskFactors.push("Hypertension", "High blood cholesterol");
+        baseRiskFactors.push("Obesity or overweight");
+        baseRiskFactors.push("Type 2 diabetes");
     } else if (severity === "critical") {
-        baseRiskFactors.push("Bệnh mạch vành", "Suy tim sung huyết");
-        baseRiskFactors.push("Rối loạn nhịp tim nặng");
-        baseRiskFactors.push("Thrombosis hoặc embolus");
+        baseRiskFactors.push("Coronary artery disease", "Congestive heart failure");
+        baseRiskFactors.push("Severe arrhythmia");
+        baseRiskFactors.push("Thrombosis or embolus");
     }
 
     // AI considers confidence level
     if (parseFloat(confidence) > 85) {
-        baseRiskFactors.push("Yếu tố nguy cơ chưa được phát hiện");
+        baseRiskFactors.push("Undetected risk factors may exist");
     }
 
     // AI selects 2-4 most relevant risk factors
@@ -131,7 +131,7 @@ const generateRiskFactors = (heartRate, severity, confidence) => {
     return shuffled.slice(0, Math.min(4, shuffled.length));
 };
 
-// ===== Rule-based fallback (giữ nguyên logic) =====
+// ===== Rule-based fallback (keep original logic, only translate messages) =====
 const getRuleBasedDiagnosis = (heartRateData) => {
     const { heartRate } = heartRateData || {};
     let diagnosis = {
@@ -145,21 +145,21 @@ const getRuleBasedDiagnosis = (heartRateData) => {
     };
 
     if (typeof heartRate !== "number" || Number.isNaN(heartRate)) {
-        diagnosis.diagnosis = "Thiếu/không hợp lệ dữ liệu nhịp tim";
-        diagnosis.analysis = "Không thể suy luận do heartRate không phải số.";
+        diagnosis.diagnosis = "Missing/invalid heart rate data";
+        diagnosis.analysis = "Cannot infer because heartRate is not a number.";
         return { success: true, diagnosis, aiModel: "rule-based", timestamp: new Date() };
     }
 
     if (heartRate < 40) {
-        diagnosis = { diagnosis: "Nhịp tim chậm nghiêm trọng (Severe Bradycardia)", severity: "critical", analysis: `Nhịp tim ${heartRate} bpm rất thấp.`, recommendations: ["Đi khám tim mạch NGAY", "Tránh vận động nặng", "Theo dõi triệu chứng", "Gọi cấp cứu nếu nặng"], riskFactors: ["Block nhĩ-thất", "Suy nút xoang", "Tác dụng phụ thuốc"], needsAttention: true, urgencyLevel: "emergency" };
+        diagnosis = { diagnosis: "Severe bradycardia", severity: "critical", analysis: `Heart rate ${heartRate} bpm is very low.`, recommendations: ["See cardiology NOW", "Avoid heavy exertion", "Monitor symptoms", "Call emergency services if severe"], riskFactors: ["Atrioventricular block", "Sick sinus syndrome", "Medication side effects"], needsAttention: true, urgencyLevel: "emergency" };
     } else if (heartRate < 60) {
-        diagnosis = { diagnosis: "Nhịp tim chậm (Bradycardia)", severity: "medium", analysis: `Nhịp tim ${heartRate} bpm thấp; cần theo dõi.`, recommendations: ["Khám tim mạch", "Theo dõi nhịp", "Lưu ý mệt/chóng mặt", "Lối sống lành mạnh"], riskFactors: ["Thuốc", "Tuyến giáp"], needsAttention: true, urgencyLevel: "urgent" };
+        diagnosis = { diagnosis: "Bradycardia", severity: "medium", analysis: `Heart rate ${heartRate} bpm is low; monitoring recommended.`, recommendations: ["Cardiology consult", "Monitor heart rate", "Watch for fatigue/dizziness", "Adopt healthy lifestyle"], riskFactors: ["Medication", "Thyroid issues"], needsAttention: true, urgencyLevel: "urgent" };
     } else if (heartRate <= 100) {
-        diagnosis = { diagnosis: "Nhịp tim bình thường", severity: "low", analysis: `Nhịp tim ${heartRate} bpm trong khoảng 60–100.`, recommendations: ["Lối sống lành mạnh", "Tập luyện", "Ăn cân bằng", "Khám định kỳ"], riskFactors: [], needsAttention: false, urgencyLevel: "routine" };
+        diagnosis = { diagnosis: "Normal heart rate", severity: "low", analysis: `Heart rate ${heartRate} bpm is within 60–100.`, recommendations: ["Maintain healthy lifestyle", "Regular exercise", "Balanced diet", "Routine check-ups"], riskFactors: [], needsAttention: false, urgencyLevel: "routine" };
     } else if (heartRate <= 140) {
-        diagnosis = { diagnosis: "Nhịp tim nhanh (Tachycardia)", severity: "medium", analysis: `Nhịp tim ${heartRate} bpm cao; có thể do stress/caffeine.`, recommendations: ["Giảm caffeine", "Quản lý stress", "Khám nếu kéo dài", "Nghỉ ngơi", "Tránh rượu thuốc"], riskFactors: ["Stress/lo âu", "Thiếu ngủ", "Chất kích thích"], needsAttention: true, urgencyLevel: "urgent" };
+        diagnosis = { diagnosis: "Tachycardia", severity: "medium", analysis: `Heart rate ${heartRate} bpm is elevated; may be due to stress/caffeine.`, recommendations: ["Reduce caffeine", "Manage stress", "See doctor if persistent", "Rest", "Avoid substances"], riskFactors: ["Stress/anxiety", "Sleep deprivation", "Stimulants"], needsAttention: true, urgencyLevel: "urgent" };
     } else {
-        diagnosis = { diagnosis: "Nhịp tim nhanh nghiêm trọng (Severe Tachycardia)", severity: "critical", analysis: `Nhịp tim ${heartRate} bpm rất cao, nguy cơ cấp cứu.`, recommendations: ["Đi cấp cứu", "Nằm nghỉ", "Không tự ý dùng thuốc", "Gọi cấp cứu nếu đau ngực/khó thở"], riskFactors: ["Rối loạn nhịp nặng", "Suy tim", "Thiếu máu cơ tim"], needsAttention: true, urgencyLevel: "emergency" };
+        diagnosis = { diagnosis: "Severe tachycardia", severity: "critical", analysis: `Heart rate ${heartRate} bpm is very high and may be an emergency.`, recommendations: ["Go to emergency", "Lie down and rest", "Do not self-medicate", "Call emergency services if chest pain/shortness of breath"], riskFactors: ["Severe arrhythmia", "Heart failure", "Myocardial ischemia"], needsAttention: true, urgencyLevel: "emergency" };
     }
     return { success: true, diagnosis, aiModel: "rule-based", timestamp: new Date() };
 };
@@ -283,15 +283,15 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
     const recommendations = generateRecommendations(heartRate, severity, (maxProb * 100).toFixed(1));
     const riskFactors = generateRiskFactors(heartRate, severity, (maxProb * 100).toFixed(1));
 
-    // Create dynamic diagnosis based on AI prediction
+    // Create dynamic diagnosis based on AI prediction (translated messages)
     let diagnosis;
     const confidence = (maxProb * 100).toFixed(1);
 
     if (predictedSeverity === 0) {
         diagnosis = {
-            diagnosis: "Nhịp tim khỏe mạnh",
+            diagnosis: "Healthy heart rate",
             severity: "low",
-            analysis: `AI phân tích: Nhịp tim ${heartRate} bpm được đánh giá là bình thường với độ tin cậy ${confidence}%. Không có dấu hiệu bất thường.`,
+            analysis: `AI analysis: Heart rate ${heartRate} bpm is considered normal with ${confidence}% confidence. No abnormal signs detected.`,
             recommendations,
             riskFactors,
             needsAttention: false,
@@ -299,9 +299,9 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
         };
     } else if (predictedSeverity === 1) {
         diagnosis = {
-            diagnosis: "Nhịp tim cần theo dõi",
+            diagnosis: "Heart rate needs monitoring",
             severity: "medium",
-            analysis: `AI phát hiện: Nhịp tim ${heartRate} bpm có dấu hiệu cần chú ý với độ tin cậy ${confidence}%. Khuyến nghị theo dõi thêm.`,
+            analysis: `AI finding: Heart rate ${heartRate} bpm shows some concerns with ${confidence}% confidence. Further monitoring recommended.`,
             recommendations,
             riskFactors,
             needsAttention: true,
@@ -309,9 +309,9 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
         };
     } else if (predictedSeverity === 2) {
         diagnosis = {
-            diagnosis: "Nguy cơ tim mạch trung bình",
+            diagnosis: "Moderate cardiovascular risk",
             severity: "high",
-            analysis: `AI cảnh báo: Nhịp tim ${heartRate} bpm cho thấy nguy cơ tim mạch ở mức trung bình với độ tin cậy ${confidence}%. Cần chú ý.`,
+            analysis: `AI alert: Heart rate ${heartRate} bpm indicates moderate cardiovascular risk with ${confidence}% confidence. Attention advised.`,
             recommendations,
             riskFactors,
             needsAttention: true,
@@ -319,9 +319,9 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
         };
     } else if (predictedSeverity === 3) {
         diagnosis = {
-            diagnosis: "Nguy cơ tim mạch cao",
+            diagnosis: "High cardiovascular risk",
             severity: "high",
-            analysis: `AI cảnh báo nghiêm trọng: Nhịp tim ${heartRate} bpm có nguy cơ tim mạch cao với độ tin cậy ${confidence}%. Cần can thiệp sớm.`,
+            analysis: `AI warning: Heart rate ${heartRate} bpm suggests a high cardiovascular risk with ${confidence}% confidence. Early intervention recommended.`,
             recommendations,
             riskFactors,
             needsAttention: true,
@@ -330,9 +330,9 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
     } else {
         // predictedSeverity === 4
         diagnosis = {
-            diagnosis: "Nguy cơ tim mạch rất cao - CẨN TRỌNG",
+            diagnosis: "Very high cardiovascular risk - URGENT",
             severity: "critical",
-            analysis: `AI phát hiện URGENT: Nhịp tim ${heartRate} bpm cho thấy nguy cơ tim mạch rất cao với độ tin cậy ${confidence}%. CẦN XỬ LÝ NGAY!`,
+            analysis: `AI URGENT: Heart rate ${heartRate} bpm indicates very high cardiovascular risk with ${confidence}% confidence. IMMEDIATE ACTION REQUIRED!`,
             recommendations,
             riskFactors,
             needsAttention: true,
@@ -347,7 +347,7 @@ const diagnoseWithTensorFlow = async (heartRateData) => {
 export const analyzeTrend = async (heartRateHistory) => {
     try {
         if (!Array.isArray(heartRateHistory) || heartRateHistory.length < 3) {
-            return { success: false, message: "Không đủ dữ liệu để phân tích xu hướng" };
+            return { success: false, message: "Not enough data to analyze trend" };
         }
 
         const rates = heartRateHistory.map((d) => d.heartRate).slice(0, 10);
@@ -356,17 +356,22 @@ export const analyzeTrend = async (heartRateHistory) => {
 
         const trendAnalysis = {
             trend,
-            analysis: `Xu hướng nhịp tim: ${trend}. Trung bình ${avg.toFixed(1)} bpm.`,
-            concerns: trend === "increasing" ? ["Nhịp tim tăng có thể do stress"] : [],
-            positivePoints: trend === "stable" ? ["Nhịp tim ổn định"] : [],
-            recommendations: ["Theo dõi tiếp tục", "Khám định kỳ"],
+            analysis: `Heart rate trend: ${trend}. Average ${avg.toFixed(1)} bpm.`,
+            concerns: trend === "increasing" ? ["Rising heart rate may be due to stress"] : [],
+            positivePoints: trend === "stable" ? ["Stable heart rate"] : [],
+            recommendations: ["Continue monitoring", "Routine check-up"],
         };
 
         return { success: true, trendAnalysis, dataPoints: rates.length };
     } catch (error) {
         console.error("Trend Analysis Error:", error?.message || error);
-        return { success: false, message: "Không thể phân tích xu hướng" };
+        return { success: false, message: "Unable to analyze trend" };
     }
 };
+
+// Runtime AI approaches used by this service:
+// 1) Attempts to call an advanced Python AI (external script run_ai.py) — may use sklearn/TF or a more complex pipeline.
+// 2) Fallback to a TensorFlow.js layers model loaded from heart_model/model.json (neural network inference with @tensorflow/tfjs-node).
+// 3) If models are unavailable or inputs invalid, a rule-based diagnosis (threshold rules) is used as fallback.
 
 export default { diagnoseHeartRate, analyzeTrend };

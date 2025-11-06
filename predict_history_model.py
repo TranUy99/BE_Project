@@ -12,6 +12,11 @@ import joblib
 ARTIFACT_MODEL = os.path.join('heart_model', 'history_model.pkl')
 ARTIFACT_META = os.path.join('heart_model', 'history_features.json')
 
+# Note: history_model.pkl is expected to be a scikit-learn classifier (supports predict and predict_proba)
+# with an associated scaler stored in the same joblib bundle. The code applies the saved scaler before
+# calling model.predict / predict_proba.
+# Typical classifier types used in this project: RandomForestClassifier, SVC (SVM), or MLPClassifier.
+
 GENDER_MAP = {"male":0, "female":1, "other":2}
 
 def load_artifacts():

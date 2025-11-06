@@ -1,12 +1,12 @@
 // src/services/health.service.js
-// Service tính toán các chỉ số sức khoẻ tim mạch cá nhân hoá dựa trên hồ sơ người dùng
+// Service to compute personalized cardiovascular health metrics based on user profile
 import User from "../models/user.model.js";
 import Data from "../models/data.model.js";
 import mongoose from "mongoose";
 
 /**
- * Tính toán phạm vi nhịp tim nghỉ (resting), nhịp tim tối đa và các vùng mục tiêu.
- * Thuật toán đơn giản hoá nhưng có tính điều chỉnh cá nhân.
+ * Compute the range for resting heart rate, maximum heart rate, and target zones.
+ * The algorithm is simplified but allows for personal adjustments.
  * @param {Object} profile - { age, gender, weight, conditions }
  * @returns {Object} metrics
  */
@@ -19,7 +19,7 @@ export function computeIdealHeartMetrics(profile = {}) {
 
   if (typeof age === "number") {
     if (age > 50) {
-      minRest += 2; // nhẹ tăng theo tuổi
+      minRest += 2; // slight increase with age
       maxRest += 4;
     }
     if (age > 65) {
@@ -30,7 +30,7 @@ export function computeIdealHeartMetrics(profile = {}) {
 
   if (gender === "female") {
     minRest += 2;
-    maxRest += 3; // nữ thường cao hơn chút
+    maxRest += 3; // females typically have slightly higher rates
   }
 
   // Athlete condition lowers resting HR
@@ -54,7 +54,7 @@ export function computeIdealHeartMetrics(profile = {}) {
   minRest = Math.max(45, Math.min(minRest, 85));
   maxRest = Math.max(minRest + 5, Math.min(maxRest, 100));
 
-  // Max heart rate (Tanaka formula slightly chính xác hơn 220-age)
+  // Max heart rate (Tanaka formula slightly more accurate than 220-age)
   const ageVal = typeof age === "number" ? age : 40;
   const maxHr = Math.round(208 - 0.7 * ageVal);
 
@@ -68,12 +68,12 @@ export function computeIdealHeartMetrics(profile = {}) {
     resting: { min: Math.round(minRest), max: Math.round(maxRest) },
     max: maxHr,
     targetZones,
-    assumptions: !age || !gender || !weight ? "Một số giá trị mặc định được dùng do thiếu dữ liệu" : null,
+    assumptions: !age || !gender || !weight ? "Some default values were used due to missing data" : null,
   };
 }
 
 /**
- * Tạo dashboard sức khoẻ cho user.
+ * Create a health dashboard for the user.
  * @param {String|ObjectId} userId
  * @returns {Promise<Object>} dashboard
  */
@@ -91,10 +91,10 @@ export async function buildHealthDashboard(userId) {
 
   const metrics = computeIdealHeartMetrics(profile);
 
-  // Lấy record mới nhất
+  // Get latest record
   const latest = await Data.findOne({ userId: id }).sort({ createdAt: -1 }).lean();
 
-  // Thống kê 7 ngày
+  // Statistics for the last 7 days
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 7);
   const statsAgg = await Data.aggregate([
@@ -112,11 +112,11 @@ export async function buildHealthDashboard(userId) {
 
   // Risk notes based on conditions
   const conditionRiskMap = {
-    hypertension: "Cần kiểm soát huyết áp và hạn chế muối.",
-    diabetes: "Theo dõi đường huyết giúp giảm biến chứng tim mạch.",
-    obesity: "Giảm cân sẽ cải thiện nhịp tim và huyết áp.",
-    thyroid: "Rối loạn tuyến giáp ảnh hưởng trực tiếp nhịp tim.",
-    athlete: "Nhịp tim thấp là bình thường ở người tập luyện tốt.",
+    hypertension: "Control your blood pressure and limit salt intake.",
+    diabetes: "Monitor blood glucose to reduce cardiovascular complications.",
+    obesity: "Weight loss can improve heart rate and blood pressure.",
+    thyroid: "Thyroid disorders directly affect heart rate.",
+    athlete: "Low resting heart rate is normal for well-trained athletes.",
   };
   const riskNotes = profile.conditions
     .map((c) => conditionRiskMap[c.toLowerCase()])

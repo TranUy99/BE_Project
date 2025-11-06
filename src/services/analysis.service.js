@@ -1,5 +1,5 @@
 // src/services/analysis.service.js
-// Phân tích thống kê nhịp tim & HRV proxy
+// Heart rate & HRV proxy statistical analysis service
 import Data from "../models/data.model.js";
 import mongoose from "mongoose";
 
@@ -15,7 +15,7 @@ export const computeBasicStats = (arr) => {
 };
 
 /**
- * Phân tích dữ liệu nhịp tim theo khoảng thời gian hoặc số lượng gần nhất.
+ * Analyze heart rate data over a time window or most recent samples.
  * @param {String|ObjectId} userId
  * @param {Object} opts { days, limit, startDate, endDate }
  */
@@ -67,9 +67,9 @@ export async function analyzeHeartRate(userId, opts = {}) {
   }
 
   const variabilityNote = hrvQuality === 'high'
-    ? 'Biến thiên nhịp tim lớn - có thể do stress, hoạt động mạnh hoặc bất thường.'
+    ? 'High heart rate variability — may be caused by stress, intense activity, or irregularity.'
     : hrvQuality === 'very-low'
-      ? 'Biến thiên rất thấp - ở vận động viên có thể bình thường, nếu không có thể cần kiểm tra.'
+      ? 'Very low heart rate variability — may be normal in athletes; otherwise consider clinical evaluation.'
       : null;
 
   return {

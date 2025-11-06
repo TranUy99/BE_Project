@@ -1,7 +1,17 @@
 # ai_heart_diagnosis.py
 """
 AI Heart Rate Diagnosis System
-Sử dụng machine learning để chẩn đoán nhịp tim thông minh hơn
+Uses machine learning to provide smarter heart rate diagnoses
+
+Algorithms / techniques used:
+- Classical ML models trained and compared:
+  - RandomForestClassifier (ensemble tree-based)
+  - Support Vector Machine (SVM) with RBF kernel
+  - Multi-layer Perceptron (MLPClassifier) neural network (scikit-learn)
+- Preprocessing: StandardScaler, LabelEncoder
+- Imbalance handling: SMOTE (oversampling)
+- Evaluation: cross_val_score (f1_macro), train/test split
+- Models saved/loaded via joblib
 """
 
 import pandas as pd
@@ -26,8 +36,8 @@ class HeartDiagnosisAI:
         self.best_model = None
 
     def load_and_preprocess_data(self, filepath='heart.csv'):
-        """Load và tiền xử lý dữ liệu"""
-        print("🔄 Đang tải dữ liệu...")
+        """Load and preprocess data"""
+        print("🔄 Loading data...")
 
         # Đọc dữ liệu (UCI Heart Disease dataset)
         columns = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
@@ -46,8 +56,8 @@ class HeartDiagnosisAI:
         return df
 
     def feature_engineering(self, df):
-        """Tạo features mới từ dữ liệu hiện có"""
-        print("🔧 Đang tạo features...")
+        """Create new features from existing data"""
+        print("🔧 Creating features...")
 
         # Tạo features mới
         df['age_group'] = pd.cut(df['age'], bins=[0, 40, 50, 60, 70, 100],
@@ -80,8 +90,8 @@ class HeartDiagnosisAI:
         return df
 
     def train_models(self, X, y):
-        """Train multiple models và chọn best"""
-        print("🤖 Đang train models...")
+        """Train multiple models and select the best"""
+        print("🤖 Training models...")
 
         # Handle class imbalance
         smote = SMOTE(random_state=42)
@@ -98,6 +108,7 @@ class HeartDiagnosisAI:
 
         # Define models
         models = {
+            # RandomForest (ensemble tree-based)
             'RandomForest': RandomForestClassifier(
                 n_estimators=200,
                 max_depth=10,
@@ -106,6 +117,7 @@ class HeartDiagnosisAI:
                 random_state=42,
                 class_weight='balanced'
             ),
+            # SVM: scikit-learn SVC (used as a classifier with probability=True)
             'SVM': SVC(
                 kernel='rbf',
                 C=1.0,
@@ -114,6 +126,7 @@ class HeartDiagnosisAI:
                 random_state=42,
                 class_weight='balanced'
             ),
+            # NeuralNetwork: scikit-learn MLPClassifier (feed-forward neural network)
             'NeuralNetwork': MLPClassifier(
                 hidden_layer_sizes=(64, 32, 16),
                 activation='relu',
@@ -157,7 +170,7 @@ class HeartDiagnosisAI:
         return best_model_name
 
     def analyze_feature_importance(self, X, feature_names):
-        """Phân tích feature importance"""
+        """Analyze feature importance"""
         if hasattr(self.best_model, 'feature_importances_'):
             importances = self.best_model.feature_importances_
             indices = np.argsort(importances)[::-1]
@@ -178,7 +191,7 @@ class HeartDiagnosisAI:
             plt.close()
 
     def predict_heart_rate_risk(self, heart_rate_data):
-        """Dự đoán risk dựa trên nhịp tim và các features khác"""
+        """Predict risk based on heart rate and other features"""
         # Chuẩn bị input data với feature engineering
         age = heart_rate_data.get('age', 50)
         trestbps = heart_rate_data.get('trestbps', 120)
@@ -252,6 +265,8 @@ class HeartDiagnosisAI:
 
         # Get predictions
         severity_pred = self.best_model.predict(features_scaled)[0]
+        # Many scikit-learn classifiers used above (RandomForest, SVC, MLPClassifier) support predict_proba;
+        # probabilities below come from the chosen scikit-learn model's predict_proba implementation.
         probabilities = self.best_model.predict_proba(features_scaled)[0]
 
         confidence = np.max(probabilities) * 100
@@ -274,26 +289,8 @@ class HeartDiagnosisAI:
         }
         return risk_map.get(severity, 'unknown')
 
-    def save_model(self, filepath='heart_diagnosis_model.pkl'):
-        """Lưu model đã train"""
-        model_data = {
-            'model': self.best_model,
-            'scaler': self.scaler,
-            'models': self.models
-        }
-        joblib.dump(model_data, filepath)
-        print(f"💾 Model saved to {filepath}")
-
-    def load_model(self, filepath='heart_diagnosis_model.pkl'):
-        """Load model đã train"""
-        model_data = joblib.load(filepath)
-        self.best_model = model_data['model']
-        self.scaler = model_data['scaler']
-        self.models = model_data['models']
-        print(f"📂 Model loaded from {filepath}")
-
     def generate_insights(self, heart_rate_data):
-        """Generate AI insights dựa trên prediction"""
+        """Generate AI insights based on prediction"""
         prediction = self.predict_heart_rate_risk(heart_rate_data)
 
         insights = {
@@ -313,14 +310,14 @@ class HeartDiagnosisAI:
         confidence = prediction['confidence']
 
         assessments = {
-            0: f"AI đánh giá: Rủi ro tim mạch rất thấp ({confidence:.1f}% confidence). Nhịp tim và các chỉ số khác trong phạm vi bình thường.",
-            1: f"AI phát hiện: Rủi ro tim mạch thấp ({confidence:.1f}% confidence). Cần theo dõi và duy trì lối sống lành mạnh.",
-            2: f"AI cảnh báo: Rủi ro tim mạch trung bình ({confidence:.1f}% confidence). Khuyến nghị kiểm tra sức khỏe định kỳ.",
-            3: f"AI cảnh báo nghiêm trọng: Rủi ro tim mạch cao ({confidence:.1f}% confidence). Cần can thiệp y tế sớm.",
-            4: f"AI CẨN TRỌNG: Rủi ro tim mạch rất cao ({confidence:.1f}% confidence). Yêu cầu xử lý y tế khẩn cấp!"
+            0: f"AI assessment: Very low cardiovascular risk ({confidence:.1f}% confidence). Heart rate and other indicators are within normal ranges.",
+            1: f"AI finding: Low cardiovascular risk ({confidence:.1f}% confidence). Recommend monitoring and maintaining a healthy lifestyle.",
+            2: f"AI alert: Moderate cardiovascular risk ({confidence:.1f}% confidence). Recommend regular health check-ups.",
+            3: f"AI warning: High cardiovascular risk ({confidence:.1f}% confidence). Medical intervention is advised.",
+            4: f"AI URGENT: Very high cardiovascular risk ({confidence:.1f}% confidence). Seek immediate medical attention!"
         }
 
-        return assessments.get(severity, "Không thể đánh giá")
+        return assessments.get(severity, "Unable to assess")
 
     def _generate_recommendations(self, prediction, heart_rate_data):
         """Generate personalized recommendations"""
@@ -331,17 +328,17 @@ class HeartDiagnosisAI:
 
         # Heart rate specific recommendations
         if heart_rate < 60:
-            base_recs.extend(["Tăng cường hoạt động thể chất nhẹ nhàng", "Theo dõi nhịp tim hàng ngày"])
+            base_recs.extend(["Increase light physical activity", "Monitor heart rate daily"])
         elif heart_rate > 100:
-            base_recs.extend(["Giảm caffeine và chất kích thích", "Thực hiện kỹ thuật thư giãn"])
+            base_recs.extend(["Reduce caffeine and stimulants", "Practice relaxation techniques"])
 
         # Severity specific recommendations
         severity_recs = {
-            0: ["Duy trì chế độ ăn uống cân bằng", "Tập thể dục đều đặn", "Khám sức khỏe định kỳ"],
-            1: ["Theo dõi huyết áp tại nhà", "Học kỹ thuật quản lý stress", "Khám tim mạch 6 tháng/lần"],
-            2: ["Khám tim mạch trong vòng 3 tháng", "Thực hiện điện tâm đồ", "Kiểm tra cholesterol"],
-            3: ["Thăm khám chuyên khoa tim mạch ngay", "Bắt đầu chế độ ăn kiêng tim mạch", "Tư vấn bác sĩ chuyên khoa"],
-            4: ["Đến phòng cấp cứu ngay lập tức", "Không lái xe một mình", "Chuẩn bị thông tin bệnh sử"]
+            0: ["Maintain a balanced diet", "Exercise regularly", "Routine health check-ups"],
+            1: ["Monitor blood pressure at home", "Learn stress management techniques", "Cardiology check every 6 months"],
+            2: ["Cardiology visit within 3 months", "Perform ECG", "Check cholesterol levels"],
+            3: ["See a cardiologist immediately", "Start a heart-healthy diet", "Consult a specialist"],
+            4: ["Go to the emergency room immediately", "Do not drive alone", "Prepare medical history information"]
         }
 
         base_recs.extend(severity_recs.get(severity, []))
@@ -356,16 +353,16 @@ class HeartDiagnosisAI:
 
         # Heart rate specific risk factors
         if heart_rate < 50:
-            risk_factors.extend(["Tuổi tác cao", "Sử dụng thuốc điều trị tim mạch"])
+            risk_factors.extend(["Advanced age", "Use of cardiac medications"])
         elif heart_rate > 120:
-            risk_factors.extend(["Stress kéo dài", "Thiếu ngủ mạn tính"])
+            risk_factors.extend(["Prolonged stress", "Chronic sleep deprivation"])
 
         # Severity specific risk factors
         severity_risks = {
-            1: ["Lối sống ít vận động", "Hút thuốc lá"],
-            2: ["Tăng huyết áp", "Cholesterol máu cao", "Tiền sử gia đình"],
-            3: ["Béo phì", "Đái tháo đường type 2", "Rối loạn lipid máu"],
-            4: ["Bệnh mạch vành", "Suy tim sung huyết", "Rối loạn nhịp tim nặng"]
+            1: ["Sedentary lifestyle", "Smoking"],
+            2: ["Hypertension", "High blood cholesterol", "Family history"],
+            3: ["Obesity", "Type 2 diabetes", "Dyslipidemia"],
+            4: ["Coronary artery disease", "Congestive heart failure", "Severe arrhythmia"]
         }
 
         risk_factors.extend(severity_risks.get(severity, []))
@@ -376,18 +373,18 @@ class HeartDiagnosisAI:
         severity = prediction['severity']
 
         measures = {
-            0: ["Duy trì cân nặng hợp lý", "Không hút thuốc", "Giới hạn rượu bia"],
-            1: ["Kiểm soát stress", "Ngủ đủ 7-8 tiếng/đêm", "Ăn nhiều rau củ quả"],
-            2: ["Theo dõi huyết áp hàng tuần", "Đi bộ 30 phút/ngày", "Hạn chế muối"],
-            3: ["Tập aerobic 3-4 lần/tuần", "Theo dõi cholesterol", "Thăm khám định kỳ"],
-            4: ["Tuân thủ tuyệt đối chỉ định bác sĩ", "Theo dõi dấu hiệu khẩn cấp", "Chuẩn bị thuốc cấp cứu"]
+            0: ["Maintain healthy weight", "Do not smoke", "Limit alcohol intake"],
+            1: ["Manage stress", "Sleep 7-8 hours/night", "Eat plenty of fruits and vegetables"],
+            2: ["Monitor blood pressure weekly", "Walk 30 minutes/day", "Limit salt intake"],
+            3: ["Do aerobic exercise 3-4 times/week", "Monitor cholesterol", "Regular check-ups"],
+            4: ["Strictly follow doctor's instructions", "Monitor for emergency signs", "Prepare emergency medications"]
         }
 
         return measures.get(severity, [])
 
 
 def main():
-    """Main function để train và test model"""
+    """Main function to train and test the model"""
     print("🫀 AI Heart Diagnosis System")
     print("=" * 50)
 

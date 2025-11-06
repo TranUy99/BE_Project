@@ -7,21 +7,31 @@ export const register = async (req, res) => {
 
         // Basic validation (password already required by schema)
         if (!username || !email || !password) {
-            return res.status(400).json({ error: "username, email, password đều bắt buộc" });
+            return res.status(400).json({ error: "Username, email, and password are required" });
+        }
+
+        // Check only for duplicate email
+        const existingByEmail = await User.findOne({ email });
+        if (existingByEmail) {
+            return res.status(400).json({ error: "Email already exists" });
         }
 
         // Normalize conditions to array
         let normalizedConditions = [];
         if (Array.isArray(conditions)) normalizedConditions = conditions;
         else if (typeof conditions === "string" && conditions.trim().length) {
-            normalizedConditions = conditions.split(/[,;]/).map((c) => c.trim()).filter(Boolean);
+            normalizedConditions = conditions
+                .split(/[,;]/)
+                .map((c) => c.trim())
+                .filter(Boolean);
         }
 
         const user = new User({ username, email, password, age, gender, weight, conditions: normalizedConditions });
         await user.save();
         res.status(201).json({ message: "User registered successfully", userId: user._id });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        // Return a consistent English message
+        res.status(400).json({ error: "Registration failed" });
     }
 };
 
@@ -35,6 +45,7 @@ export const login = async (req, res) => {
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || "secret", { expiresIn: "1h" });
         res.json({ token, userId: user._id, username: user.username, email: user.email });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        // Return a consistent English message
+        res.status(500).json({ error: "Login failed" });
     }
 };
